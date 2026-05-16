@@ -9,3 +9,7 @@ model:
 
 paths:
   model_save: "models/model.pkl"
+
+paths:
+  model_save: "models/model.pkl"
+  data_raw: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
