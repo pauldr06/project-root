@@ -11,7 +11,6 @@ def predict(model_path="models/model.pkl"):
 
     model = joblib.load(model_path)
 
-    # Cliente de ejemplo
     cliente = pd.DataFrame([{
         "gender": 1, "SeniorCitizen": 0, "Partner": 1, "Dependents": 0,
         "tenure": 12, "PhoneService": 1, "MultipleLines": 0, "InternetService": 1,

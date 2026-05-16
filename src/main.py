@@ -32,6 +32,7 @@ def main():
     print(f"  Accuracy  : {metrics['accuracy']:.4f}")
     print(f"  Recall    : {metrics['recall']:.4f}")
     print(f"  F1 Score  : {metrics['f1_score']:.4f}")
+    print(f"\n  Modelo guardado en: {config['paths']['model_save']}")
     print("=" * 50)
     print("  Pipeline completado exitosamente.")
     print("=" * 50)
@@ -39,5 +40,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    

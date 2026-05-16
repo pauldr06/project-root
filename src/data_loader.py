@@ -11,7 +11,6 @@ def load_and_preprocess_data(config):
 
     df = df.drop(columns=["customerID"])
 
-    # Codificar todas las columnas categóricas automáticamente
     for col in df.select_dtypes(include="object").columns:
         df[col] = pd.Categorical(df[col]).codes
 
