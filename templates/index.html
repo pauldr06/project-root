@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Churn Predictor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+      color: #1a1a2e;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 780px;
+      margin: 0 auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    select, input[type="number"] {
+      padding: 10px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #fafafa;
+      transition: border-color 0.2s;
+      color: #1a1a2e;
+    }
+
+    select:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #4f46e5;
+      background: white;
+    }
+
+    .btn {
+      margin-top: 28px;
+      width: 100%;
+      padding: 14px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover { background: #4338ca; }
+    .btn:active { transform: scale(0.99); }
+
+    .result {
+      display: none;
+      margin-top: 24px;
+      padding: 20px 24px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .result.churn {
+      background: #fff1f1;
+      border: 2px solid #f87171;
+      color: #b91c1c;
+    }
+
+    .result.no-churn {
+      background: #f0fdf4;
+      border: 2px solid #4ade80;
+      color: #15803d;
+    }
+
+    .result .icon { font-size: 2rem; display: block; margin-bottom: 6px; }
+    .result .label { font-size: 0.8rem; font-weight: 400; margin-top: 4px; color: inherit; opacity: 0.8; }
+
+    .proba-section {
+      margin-top: 16px;
+      text-align: left;
+    }
+
+    .proba-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .bar-track {
+      background: #e5e7eb;
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.6s ease;
+    }
+
+    .bar-fill.danger  { background: #f87171; }
+    .bar-fill.success { background: #4ade80; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat-box {
+      background: rgba(0,0,0,0.04);
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .stat-box .val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: block;
+    }
+
+    .stat-box .lbl {
+      font-size: 0.72rem;
+      opacity: 0.65;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .spinner {
+      display: none;
+      text-align: center;
+      margin-top: 24px;
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 560px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Churn Predictor</h1>
+  <p class="subtitle">Ingresa los datos del cliente para predecir si abandonará el servicio</p>
+
+  <div class="card">
+    <form id="form">
+      <div class="grid">
+
+        <div class="field">
+          <label>Gender</label>
+          <select name="gender">
+            <option value="1">Male</option>
+            <option value="0">Female</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Senior Citizen</label>
+          <select name="SeniorCitizen">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Partner</label>
+          <select name="Partner">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Dependents</label>
+          <select name="Dependents">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Tenure (meses)</label>
+          <input type="number" name="tenure" value="12" min="0" max="72"/>
+        </div>
+
+        <div class="field">
+          <label>Phone Service</label>
+          <select name="PhoneService">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Multiple Lines</label>
+          <select name="MultipleLines">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+            <option value="2">No phone service</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Internet Service</label>
+          <select name="InternetService">
+            <option value="0">DSL</option>
+            <option value="1">Fiber optic</option>
+            <option value="2">No</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Online Security</label>
+          <select name="OnlineSecurity">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+            <option value="2">No internet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Online Backup</label>
+          <select name="OnlineBackup">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+            <option value="2">No internet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Device Protection</label>
+          <select name="DeviceProtection">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+            <option value="2">No internet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Tech Support</label>
+          <select name="TechSupport">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+            <option value="2">No internet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Streaming TV</label>
+          <select name="StreamingTV">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+            <option value="2">No internet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Streaming Movies</label>
+          <select name="StreamingMovies">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+            <option value="2">No internet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Contract</label>
+          <select name="Contract">
+            <option value="0">Month-to-month</option>
+            <option value="1">One year</option>
+            <option value="2">Two year</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Paperless Billing</label>
+          <select name="PaperlessBilling">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Payment Method</label>
+          <select name="PaymentMethod">
+            <option value="0">Bank transfer</option>
+            <option value="1">Credit card</option>
+            <option value="2">Electronic check</option>
+            <option value="3">Mailed check</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Monthly Charges ($)</label>
+          <input type="number" name="MonthlyCharges" value="65.5" step="0.01" min="0"/>
+        </div>
+
+        <div class="field" style="grid-column: span 2;">
+          <label>Total Charges ($)</label>
+          <input type="number" name="TotalCharges" value="786.0" step="0.01" min="0"/>
+        </div>
+
+      </div>
+
+      <button class="btn" type="submit">Predecir Churn</button>
+    </form>
+
+    <div class="spinner" id="spinner">Analizando cliente...</div>
+
+    <div class="result" id="result">
+      <span class="icon" id="icon"></span>
+      <span id="prediccion"></span>
+      <span class="label" id="sublabel"></span>
+
+      <div class="proba-section">
+        <div class="proba-row">
+          <span>Probabilidad de Churn</span>
+          <span id="pct-churn"></span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill danger" id="bar-churn" style="width:0%"></div>
+        </div>
+        <div class="proba-row">
+          <span>Probabilidad de Retención</span>
+          <span id="pct-nochurn"></span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill success" id="bar-nochurn" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="stats-grid"></div>
+    </div>
+  </div>
+
+  <script>
+    const CONTRACT_MAP  = { 0: 'Month-to-month', 1: 'One year', 2: 'Two year' };
+    const INTERNET_MAP  = { 0: 'DSL', 1: 'Fiber optic', 2: 'No' };
+    const PAYMENT_MAP   = { 0: 'Bank transfer', 1: 'Credit card', 2: 'Electronic check', 3: 'Mailed check' };
+
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {};
+      new FormData(form).forEach((v, k) => { data[k] = parseFloat(v); });
+
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('spinner').style.display = 'block';
+
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        const resultEl = document.getElementById('result');
+        document.getElementById('spinner').style.display = 'none';
+
+        if (json.error) {
+          resultEl.className = 'result churn';
+          document.getElementById('icon').textContent = '⚠️';
+          document.getElementById('prediccion').textContent = 'Error: ' + json.error;
+          document.getElementById('sublabel').textContent = '';
+          document.getElementById('stats-grid').innerHTML = '';
+          resultEl.style.display = 'block';
+          return;
+        }
+
+        if (json.churn === 1) {
+          resultEl.className = 'result churn';
+          document.getElementById('icon').textContent = '⚠️';
+          document.getElementById('prediccion').textContent = 'El cliente probablemente abandonará el servicio';
+          document.getElementById('sublabel').textContent = 'Se recomienda tomar acción de retención';
+        } else {
+          resultEl.className = 'result no-churn';
+          document.getElementById('icon').textContent = '✅';
+          document.getElementById('prediccion').textContent = 'El cliente tiene bajo riesgo de abandonar';
+          document.getElementById('sublabel').textContent = 'No se requiere acción inmediata';
+        }
+
+        // Barras de probabilidad
+        document.getElementById('pct-churn').textContent   = json.probabilidad_churn + '%';
+        document.getElementById('pct-nochurn').textContent = json.probabilidad_no_churn + '%';
+        document.getElementById('bar-churn').style.width   = json.probabilidad_churn + '%';
+        document.getElementById('bar-nochurn').style.width = json.probabilidad_no_churn + '%';
+
+        // Stats del cliente
+        const stats = [
+          { lbl: 'Antigüedad',   val: data.tenure + ' meses' },
+          { lbl: 'Cargo mensual', val: '$' + data.MonthlyCharges.toFixed(2) },
+          { lbl: 'Cargo total',   val: '$' + data.TotalCharges.toFixed(2) },
+          { lbl: 'Contrato',      val: CONTRACT_MAP[data.Contract] },
+          { lbl: 'Internet',      val: INTERNET_MAP[data.InternetService] },
+          { lbl: 'Pago',          val: PAYMENT_MAP[data.PaymentMethod] },
+        ];
+
+        document.getElementById('stats-grid').innerHTML = stats.map(s =>
+          `<div class="stat-box"><span class="val">${s.val}</span><span class="lbl">${s.lbl}</span></div>`
+        ).join('');
+
+        resultEl.style.display = 'block';
+      } catch (err) {
+        document.getElementById('spinner').style.display = 'none';
+        alert('Error conectando con la API');
+      }
+    });
+  </script>
+</body>
+</html>
